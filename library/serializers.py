@@ -75,15 +75,15 @@ class LoanSerializer(serializers.ModelSerializer):
             'is_overdue',
             'status',
         ]
-        read_only_fields = ['loan_date']
+        read_only_fields = ['loan_date', 'return_date', 'is_returned']
 
     def get_is_overdue(self, obj):
         return obj.is_overdue()
 
     def validate(self, attrs):
+        # A friendlier early answer than the service's locked check, which stays
+        # authoritative because stock can change between validation and write.
         book = attrs.get('book')
-        # Only guard stock when a new loan is being opened; updates (e.g. marking
-        # a loan returned) must not be blocked by a currently empty shelf.
-        if self.instance is None and book is not None and book.available_copies < 1:
+        if book is not None and book.available_copies < 1:
             raise serializers.ValidationError({'book_id': 'No available copies of this book.'})
         return attrs

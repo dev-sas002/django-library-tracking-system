@@ -144,6 +144,38 @@ class ReturnBookTests(TestCase):
         self.assertEqual(returned.status, LoanStatus.RETURNED)
 
 
+class ReturnLoanTests(TestCase):
+    def test_closes_that_loan_and_restocks(self):
+        book = make_book(available_copies=0)
+        loan = make_loan(book=book, due_in_days=-3)
+
+        returned = loan_service.return_loan(loan)
+
+        book.refresh_from_db()
+        self.assertEqual(book.available_copies, 1)
+        self.assertEqual(returned.status, LoanStatus.RETURNED)
+
+    def test_already_returned_raises(self):
+        loan = make_loan(is_returned=True)
+        with self.assertRaises(exceptions.LoanAlreadyReturned):
+            loan_service.return_loan(loan)
+
+
+class DeleteLoanTests(TestCase):
+    def test_open_loan_is_restocked_before_deletion(self):
+        book = make_book(available_copies=0)
+        loan_service.delete_loan(make_loan(book=book))
+        book.refresh_from_db()
+        self.assertEqual(book.available_copies, 1)
+        self.assertEqual(Loan.objects.count(), 0)
+
+    def test_returned_loan_is_deleted_without_restocking(self):
+        book = make_book(available_copies=2)
+        loan_service.delete_loan(make_loan(book=book, is_returned=True))
+        book.refresh_from_db()
+        self.assertEqual(book.available_copies, 2)
+
+
 class ExtendLoanTests(TestCase):
     def test_pushes_the_due_date_out(self):
         loan = make_loan(due_in_days=4)

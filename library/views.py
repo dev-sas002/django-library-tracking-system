@@ -56,14 +56,29 @@ class MemberViewSet(viewsets.ModelViewSet):
 
 
 class LoanViewSet(viewsets.ModelViewSet):
+    """Loans change state only through the service: open, extend, return, delete.
+
+    PUT and PATCH are switched off because a generic update could flip
+    ``is_returned`` or move the loan to another book without touching stock.
+    """
+
     queryset = Loan.objects.with_related()
     serializer_class = LoanSerializer
+    http_method_names = ['get', 'post', 'delete', 'head', 'options']
 
     def perform_create(self, serializer):
         """Same rules, locking and confirmation as ``POST /api/books/{id}/loan/``."""
         data = serializer.validated_data
         loan = open_loan(book=data['book'], member=data['member'], due_date=data.get('due_date'))
         serializer.instance = self.get_queryset().get(pk=loan.pk)
+
+    def perform_destroy(self, instance):
+        loan_service.delete_loan(instance)
+
+    @action(detail=True, methods=['post'], url_path='return')
+    def return_loan(self, request, pk=None):
+        loan = loan_service.return_loan(self.get_object())
+        return Response(self.get_serializer(loan).data, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=['post'], url_path='extend_due_date')
     def extend_due_date(self, request, pk=None):

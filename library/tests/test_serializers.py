@@ -102,12 +102,7 @@ class LoanSerializerTests(TestCase):
         self.assertEqual(loan.book_id, book.id)
         self.assertEqual(loan.due_date, timezone.now().date() + timedelta(days=14))
 
-    def test_update_of_empty_stock_loan_is_not_blocked(self):
-        """Returning the last copy must not be rejected by the availability guard."""
-        book = make_book(available_copies=0)
-        loan = make_loan(book=book)
-        serializer = LoanSerializer(
-            loan,
-            data={'book_id': book.id, 'member_id': loan.member_id, 'is_returned': True},
-        )
-        self.assertTrue(serializer.is_valid(), serializer.errors)
+    def test_lifecycle_fields_are_read_only(self):
+        fields = LoanSerializer().fields
+        self.assertTrue(fields['is_returned'].read_only)
+        self.assertTrue(fields['return_date'].read_only)

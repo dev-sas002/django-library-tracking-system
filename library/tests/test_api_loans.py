@@ -185,6 +185,74 @@ class LoanStatusFieldTests(ApiTestCase):
         response = self.client.patch(
             f'/api/loans/{loan.id}/', {'status': LoanStatus.RETURNED.value}
         )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
         loan.refresh_from_db()
         self.assertFalse(loan.is_returned)
+
+
+class LoanLifecycleEndpointTests(ApiTestCase):
+    """The generic CRUD routes cannot sidestep the stock bookkeeping."""
+
+    def setUp(self):
+        super().setUp()
+        self.book = make_book(available_copies=0)
+        self.loan = make_loan(book=self.book)
+
+    def test_patching_is_returned_is_not_allowed(self):
+        response = self.client.patch(
+            f'/api/loans/{self.loan.id}/', {'is_returned': True}, format='json'
+        )
+        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+        self.loan.refresh_from_db()
+        self.assertFalse(self.loan.is_returned)
+
+    def test_put_cannot_move_a_loan_to_another_book(self):
+        other = make_book(available_copies=0, title='Elsewhere')
+        response = self.client.put(
+            f'/api/loans/{self.loan.id}/',
+            {'book_id': other.id, 'member_id': self.loan.member_id},
+            format='json',
+        )
+        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+        self.loan.refresh_from_db()
+        self.assertEqual(self.loan.book_id, self.book.id)
+
+    def test_return_closes_the_loan_and_restocks(self):
+        response = self.client.post(f'/api/loans/{self.loan.id}/return/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['status'], LoanStatus.RETURNED.value)
+        self.assertEqual(response.data['return_date'], timezone.localdate().isoformat())
+        self.book.refresh_from_db()
+        self.assertEqual(self.book.available_copies, 1)
+
+    def test_second_return_is_refused_without_restocking_twice(self):
+        self.client.post(f'/api/loans/{self.loan.id}/return/')
+        response = self.client.post(f'/api/loans/{self.loan.id}/return/')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data['code'], 'loan_already_returned')
+        self.book.refresh_from_db()
+        self.assertEqual(self.book.available_copies, 1)
+
+    def test_deleting_an_open_loan_puts_the_copy_back(self):
+        response = self.client.delete(f'/api/loans/{self.loan.id}/')
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(Loan.objects.filter(pk=self.loan.id).exists())
+        self.book.refresh_from_db()
+        self.assertEqual(self.book.available_copies, 1)
+
+    def test_deleting_a_returned_loan_leaves_stock_alone(self):
+        returned = make_loan(book=self.book, is_returned=True)
+        self.client.delete(f'/api/loans/{returned.id}/')
+        self.book.refresh_from_db()
+        self.assertEqual(self.book.available_copies, 0)
+
+    def test_anonymous_cannot_return_or_delete(self):
+        self.client.force_authenticate(user=None)
+        self.assertEqual(
+            self.client.post(f'/api/loans/{self.loan.id}/return/').status_code,
+            status.HTTP_403_FORBIDDEN,
+        )
+        self.assertEqual(
+            self.client.delete(f'/api/loans/{self.loan.id}/').status_code,
+            status.HTTP_403_FORBIDDEN,
+        )

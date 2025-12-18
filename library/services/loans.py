@@ -138,11 +138,32 @@ def return_book(*, book, member):
     )
     if loan is None:
         raise NoActiveLoan()
+    return _close(loan)
 
+
+@transaction.atomic
+def return_loan(loan):
+    """Close one specific loan and restock its copy."""
+    locked = Loan.objects.select_for_update().get(pk=loan.pk)
+    if locked.is_returned:
+        raise LoanAlreadyReturned()
+    return _close(locked)
+
+
+@transaction.atomic
+def delete_loan(loan):
+    """Delete a loan record, putting the copy back first if it was still out."""
+    locked = Loan.objects.select_for_update().get(pk=loan.pk)
+    if not locked.is_returned:
+        Book.objects.filter(pk=locked.book_id).update(available_copies=F('available_copies') + 1)
+    locked.delete()
+
+
+def _close(loan):
     loan.is_returned = True
     loan.return_date = timezone.localdate()
     loan.save(update_fields=['is_returned', 'return_date'])
-    Book.objects.filter(pk=book.pk).update(available_copies=F('available_copies') + 1)
+    Book.objects.filter(pk=loan.book_id).update(available_copies=F('available_copies') + 1)
     return loan
 
 
