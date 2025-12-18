@@ -15,6 +15,20 @@ class LoanEndpointTests(ApiTestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         book.refresh_from_db()
         self.assertEqual(book.available_copies, 2)
+        self.assertEqual(response.data['book']['available_copies'], 2)
+        self.mock_notify.assert_called_once_with(response.data['id'])
+
+    def test_create_loan_with_a_past_due_date_is_refused(self):
+        book = make_book(available_copies=1)
+        response = self.client.post(
+            '/api/loans/',
+            {'book_id': book.id, 'member_id': make_member().id, 'due_date': '2001-01-01'},
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data['code'], 'invalid_due_date')
+        self.assertEqual(Loan.objects.count(), 0)
+        book.refresh_from_db()
+        self.assertEqual(book.available_copies, 1)
 
     def test_create_loan_rejected_when_out_of_stock(self):
         book = make_book(available_copies=0)

@@ -6,7 +6,6 @@ rule violations become ``400`` responses in
 :func:`library.api_errors.domain_exception_handler`.
 """
 
-from django.db import transaction
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -15,6 +14,13 @@ from .models import Author, Book, Loan, Member
 from .serializers import AuthorSerializer, BookSerializer, LoanSerializer, MemberSerializer
 from .services import loans as loan_service
 from .tasks import send_loan_notification
+
+
+def open_loan(*, book, member, due_date=None):
+    """The one way HTTP opens a loan: through the service, then a confirmation."""
+    loan = loan_service.loan_book(book=book, member=member, due_date=due_date)
+    send_loan_notification.delay(loan.id)
+    return loan
 
 
 class AuthorViewSet(viewsets.ModelViewSet):
@@ -30,9 +36,7 @@ class BookViewSet(viewsets.ModelViewSet):
     def loan(self, request, pk=None):
         book = self.get_object()
         member = loan_service.resolve_member(request.data.get('member_id'))
-        loan = loan_service.loan_book(book=book, member=member)
-
-        send_loan_notification.delay(loan.id)
+        loan = open_loan(book=book, member=member)
         return Response(
             {'status': 'Book loaned successfully.', 'loan_id': loan.id},
             status=status.HTTP_201_CREATED,
@@ -56,10 +60,10 @@ class LoanViewSet(viewsets.ModelViewSet):
     serializer_class = LoanSerializer
 
     def perform_create(self, serializer):
-        """Creating a loan through /api/loans/ must also take a copy off the shelf."""
-        with transaction.atomic():
-            loan = serializer.save()
-            loan_service.reserve_copy(loan.book_id)
+        """Same rules, locking and confirmation as ``POST /api/books/{id}/loan/``."""
+        data = serializer.validated_data
+        loan = open_loan(book=data['book'], member=data['member'], due_date=data.get('due_date'))
+        serializer.instance = self.get_queryset().get(pk=loan.pk)
 
     @action(detail=True, methods=['post'], url_path='extend_due_date')
     def extend_due_date(self, request, pk=None):

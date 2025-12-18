@@ -44,6 +44,11 @@ class LoanOverdue(DomainError):
     message = 'Cannot extend an overdue loan.'
 
 
+class InvalidDueDate(DomainError):
+    code = 'invalid_due_date'
+    message = 'due_date is out of range.'
+
+
 class InvalidExtension(DomainError):
     code = 'invalid_extension'
     message = 'additional_days is out of range.'

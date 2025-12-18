@@ -31,6 +31,7 @@ from library.models import Book, Loan, LoanStatus, Member
 
 from .exceptions import (
     BookUnavailable,
+    InvalidDueDate,
     InvalidExtension,
     LoanAlreadyReturned,
     LoanOverdue,
@@ -52,6 +53,9 @@ EXTENDABLE_STATUSES = frozenset({LoanStatus.ACTIVE})
 #: Upper bound on one extension. Beyond being a sane policy, it keeps
 #: ``due_date + timedelta(days=n)`` clear of ``OverflowError``.
 MAX_EXTENSION_DAYS = 365
+
+#: How far ahead a new loan's due date may be set when the caller picks one.
+MAX_LOAN_PERIOD_DAYS = 365
 
 
 def resolve_member(member_id):
@@ -90,36 +94,31 @@ def parse_additional_days(raw_value):
     return additional_days
 
 
+def check_due_date(due_date, today=None):
+    """Refuse a chosen due date that is already past or implausibly far out."""
+    today = today or timezone.localdate()
+    latest = today + timedelta(days=MAX_LOAN_PERIOD_DAYS)
+    if not today <= due_date <= latest:
+        raise InvalidDueDate(f'due_date must be between {today} and {latest}.')
+
+
 @transaction.atomic
-def loan_book(*, book, member):
+def loan_book(*, book, member, due_date=None):
     """Open a loan for ``member`` and take a copy of ``book`` off the shelf.
 
     The stock check and the decrement happen under a row lock, so two concurrent
-    requests cannot both observe the last copy as available.
+    requests cannot both observe the last copy as available. Without a
+    ``due_date`` the loan runs for ``DEFAULT_LOAN_PERIOD_DAYS``.
     """
+    if due_date is not None:
+        check_due_date(due_date)
     locked_book = Book.objects.select_for_update().get(pk=book.pk)
     if locked_book.available_copies < 1:
         raise BookUnavailable()
 
-    loan = Loan.objects.create(book=locked_book, member=member)
+    loan = Loan.objects.create(book=locked_book, member=member, due_date=due_date)
     Book.objects.filter(pk=locked_book.pk).update(available_copies=F('available_copies') - 1)
     return loan
-
-
-@transaction.atomic
-def reserve_copy(book_id):
-    """Decrement stock for an already-created loan, or fail if the shelf is empty.
-
-    Used by ``POST /api/loans/``, where the serializer creates the loan. The
-    conditional ``UPDATE ... WHERE available_copies > 0`` is the authoritative
-    check: the serializer's validation is a friendlier duplicate of it that can
-    go stale between validation and write.
-    """
-    updated = Book.objects.filter(pk=book_id, available_copies__gt=0).update(
-        available_copies=F('available_copies') - 1
-    )
-    if not updated:
-        raise BookUnavailable()
 
 
 @transaction.atomic

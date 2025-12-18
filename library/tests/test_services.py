@@ -78,18 +78,27 @@ class LoanBookTests(TestCase):
             loan_service.loan_book(book=book, member=make_member())
         self.assertEqual(Loan.objects.count(), 0)
 
+    def test_honours_a_chosen_due_date(self):
+        due = timezone.localdate() + timedelta(days=30)
+        loan = loan_service.loan_book(book=make_book(), member=make_member(), due_date=due)
+        self.assertEqual(loan.due_date, due)
 
-class ReserveCopyTests(TestCase):
-    def test_decrements_available_copies(self):
-        book = make_book(available_copies=3)
-        loan_service.reserve_copy(book.id)
+    def test_due_date_may_be_today_but_not_in_the_past(self):
+        today = timezone.localdate()
+        loan = loan_service.loan_book(book=make_book(), member=make_member(), due_date=today)
+        self.assertEqual(loan.due_date, today)
+        with self.assertRaises(exceptions.InvalidDueDate):
+            loan_service.loan_book(
+                book=make_book(), member=make_member(), due_date=today - timedelta(days=1)
+            )
+
+    def test_due_date_beyond_the_maximum_period_is_refused(self):
+        book = make_book(available_copies=1)
+        too_far = timezone.localdate() + timedelta(days=loan_service.MAX_LOAN_PERIOD_DAYS + 1)
+        with self.assertRaises(exceptions.InvalidDueDate):
+            loan_service.loan_book(book=book, member=make_member(), due_date=too_far)
         book.refresh_from_db()
-        self.assertEqual(book.available_copies, 2)
-
-    def test_raises_when_the_shelf_is_empty(self):
-        book = make_book(available_copies=0)
-        with self.assertRaises(exceptions.BookUnavailable):
-            loan_service.reserve_copy(book.id)
+        self.assertEqual(book.available_copies, 1)
 
 
 class ReturnBookTests(TestCase):

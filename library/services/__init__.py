@@ -8,6 +8,7 @@ layering rule, and it is what makes the rules testable without a request.
 from .exceptions import (
     BookUnavailable,
     DomainError,
+    InvalidDueDate,
     InvalidExtension,
     LoanAlreadyReturned,
     LoanOverdue,
@@ -18,6 +19,7 @@ from .exceptions import (
 __all__ = [
     'BookUnavailable',
     'DomainError',
+    'InvalidDueDate',
     'InvalidExtension',
     'LoanAlreadyReturned',
     'LoanOverdue',
