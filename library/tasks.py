@@ -5,6 +5,7 @@ notifications, and hand them to the configured channels.
 """
 
 import logging
+from datetime import date
 
 from celery import shared_task
 from django.conf import settings
@@ -46,8 +47,13 @@ def check_overdue_loans(as_of=None, batch_size=None):
     The scan itself is served by the ``loan_open_due_idx`` index on
     ``(is_returned, due_date)``.
 
+    ``as_of`` replays the job for another day. Through the broker it arrives as an
+    ISO string, because the JSON serializer has no date type.
+
     Returns the number of notifications sent.
     """
+    if isinstance(as_of, str):
+        as_of = date.fromisoformat(as_of)
     batch_size = batch_size or getattr(settings, 'OVERDUE_NOTIFICATION_BATCH_SIZE', 500)
     overdue = (
         Loan.objects.overdue(as_of).select_related('book', 'member__user').only(*_OVERDUE_FIELDS)

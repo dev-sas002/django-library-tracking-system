@@ -117,6 +117,15 @@ class CheckOverdueLoansScalabilityTests(TestCase):
         self.assertEqual(check_overdue_loans(), 0)
         self.assertEqual(check_overdue_loans(as_of=timezone.localdate() + timedelta(days=10)), 1)
 
+    def test_as_of_survives_the_json_round_trip_through_the_broker(self):
+        make_loan(
+            member=make_member(username='serialised', email='s@example.com'),
+            due_in_days=5,
+        )
+        as_of = (timezone.localdate() + timedelta(days=10)).isoformat()
+        self.assertEqual(check_overdue_loans(as_of=as_of), 1)
+        self.assertIn('(5 day(s) ago)', mail.outbox[0].body)
+
 
 class NotificationChannelIntegrationTests(TestCase):
     """Both tasks go through the channel seam, not through send_mail directly."""
