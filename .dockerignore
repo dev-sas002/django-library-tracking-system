@@ -18,5 +18,4 @@ staticfiles
 .mypy_cache
 .DS_Store
 docs
-CONTRIBUTING.md
 README.md

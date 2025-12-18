@@ -28,7 +28,7 @@ ignore = [
 "library/tests/*" = ["E501"]
 
 [tool.ruff.lint.isort]
-known-first-party = ["library", "library_system", "utils"]
+known-first-party = ["library", "library_system"]
 
 [tool.ruff.format]
 # The codebase was written with single quotes; keeping the formatter aligned
