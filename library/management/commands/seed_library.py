@@ -62,6 +62,7 @@ LOANS = [
     ('evan', 'The Left Hand of Darkness', -20, True),
 ]
 
+# Demo-only default for the seeded members; SEED_MEMBER_PASSWORD overrides it.
 DEFAULT_MEMBER_PASSWORD = 'library-demo'
 
 
@@ -158,7 +159,7 @@ class Command(BaseCommand):
     def _ensure_librarian(self):
         """Create the demo staff account the README's curl examples use."""
         username = os.getenv('LIBRARIAN_USERNAME', 'librarian')
-        password = os.getenv('LIBRARIAN_PASSWORD', 'librarian')
+        password = os.getenv('LIBRARIAN_PASSWORD', 'librarian')  # demo-only default
         user, created = User.objects.get_or_create(
             username=username,
             defaults={

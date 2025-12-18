@@ -15,6 +15,7 @@ x-django-env: &django-env
   DB_ENGINE: django.db.backends.postgresql
   POSTGRES_DB: "${POSTGRES_DB:-library_db}"
   POSTGRES_USER: "${POSTGRES_USER:-library_user}"
+  # Demo password; override it from .env for anything beyond a local demo.
   POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:-library_password}"
   DB_HOST: db
   DB_PORT: "5432"
