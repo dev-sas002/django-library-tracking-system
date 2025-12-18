@@ -2,4 +2,4 @@
 
 # Lint + format. Configured in pyproject.toml; run with `ruff check .` and
 # `ruff format --check .`.
-ruff==0.16.8
+ruff==0.17.4

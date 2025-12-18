@@ -33,7 +33,7 @@ x-app: &app
 
 services:
   db:
-    image: postgres:16-alpine
+    image: postgres:17-alpine
     environment:
       POSTGRES_DB: "${POSTGRES_DB:-library_db}"
       POSTGRES_USER: "${POSTGRES_USER:-library_user}"

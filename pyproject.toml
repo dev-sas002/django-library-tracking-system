@@ -1,3 +1,9 @@
+[project]
+name = "library-tracking-system"
+version = "1.0.0"
+description = "Django REST loan tracking for a lending library, with Celery overdue reminders."
+requires-python = ">=3.12,<3.13"
+
 [tool.ruff]
 line-length = 100
 target-version = "py312"
