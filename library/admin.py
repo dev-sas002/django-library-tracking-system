@@ -82,7 +82,9 @@ class LoanAdminForm(forms.ModelForm):
 @admin.register(Loan)
 class LoanAdmin(admin.ModelAdmin):
     form = LoanAdminForm
-    list_display = ('book', 'member', 'loan_date', 'due_date', 'return_date', 'status')
+    # Status sits next to the title so it stays visible on a phone, where the
+    # admin table scrolls sideways.
+    list_display = ('book', 'status', 'member', 'due_date', 'loan_date', 'return_date')
     list_filter = (LoanStatusFilter, 'due_date')
     search_fields = ('book__title', 'member__user__username')
     list_select_related = ('book', 'member__user')

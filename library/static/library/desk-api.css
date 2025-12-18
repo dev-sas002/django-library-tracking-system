@@ -33,6 +33,23 @@ body {
     font-weight: 650;
 }
 
+@media (max-width: 767px) {
+    .navbar-inverse .container {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .navbar-inverse .navbar-nav {
+        margin: 0;
+    }
+
+    .navbar-inverse .navbar-nav > li > a {
+        padding: 15px 0;
+    }
+}
+
 .desk-brand-sub {
     color: #f3ead8;
     font-weight: 500;
@@ -59,6 +76,22 @@ a:focus {
 .breadcrumb {
     background: #f3eee3;
     margin-top: 18px;
+}
+
+.breadcrumb a {
+    color: var(--desk-link);
+}
+
+.pagination > li > a {
+    color: var(--desk-link);
+}
+
+.pagination > .active > a,
+.pagination > .active > a:hover,
+.pagination > .active > a:focus {
+    background: var(--desk-green);
+    border-color: var(--desk-green);
+    color: #fff;
 }
 
 .btn-primary {

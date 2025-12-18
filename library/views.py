@@ -56,10 +56,9 @@ class MemberViewSet(viewsets.ModelViewSet):
 
 
 class LoanViewSet(viewsets.ModelViewSet):
-    """Loans change state only through the service: open, extend, return, delete.
+    """Open loans with POST, then extend, return or delete them. There is no PUT or PATCH.
 
-    PUT and PATCH are switched off because a generic update could flip
-    ``is_returned`` or move the loan to another book without touching stock.
+    A generic update could close a loan or move it to another book without touching stock.
     """
 
     queryset = Loan.objects.with_related()
