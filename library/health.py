@@ -1,9 +1,13 @@
 """Liveness/readiness endpoint used by the container healthcheck."""
 
-from django.db import connection
+import logging
+
+from django.db import DatabaseError, connection
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
+
+logger = logging.getLogger(__name__)
 
 
 @api_view(['GET'])
@@ -19,6 +23,7 @@ def health(request):
         with connection.cursor() as cursor:
             cursor.execute('SELECT 1')
             cursor.fetchone()
-    except Exception:
+    except DatabaseError:
+        logger.exception('health: database check failed')
         return Response({'status': 'unhealthy', 'database': 'unavailable'}, status=503)
     return Response({'status': 'ok', 'database': 'ok'})

@@ -1,9 +1,11 @@
 """Operational surfaces: the health probe and the seed command."""
 
 from io import StringIO
+from unittest import mock
 
 from django.contrib.auth.models import User
 from django.core.management import call_command
+from django.db import OperationalError
 from django.test import TestCase
 from rest_framework.test import APITestCase
 
@@ -16,6 +18,15 @@ class HealthEndpointTests(APITestCase):
         response = self.client.get('/health/')
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data, {'status': 'ok', 'database': 'ok'})
+
+    def test_reports_503_when_the_database_is_unreachable(self):
+        with (
+            mock.patch('library.health.connection.cursor', side_effect=OperationalError('down')),
+            self.assertLogs('library.health', level='ERROR'),
+        ):
+            response = self.client.get('/health/')
+        self.assertEqual(response.status_code, 503)
+        self.assertEqual(response.data['database'], 'unavailable')
 
 
 class SeedLibraryCommandTests(TestCase):
