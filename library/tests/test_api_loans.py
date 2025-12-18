@@ -80,6 +80,18 @@ class ExtendDueDateTests(ApiTestCase):
         self.loan.refresh_from_db()
         self.assertEqual(self.loan.due_date, timezone.now().date() + timedelta(days=7))
 
+    def test_huge_extension_is_400_not_500(self):
+        response = self.client.post(self.url, {'additional_days': 3_000_000}, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data['code'], 'invalid_extension')
+
+    def test_fractional_days_are_not_truncated(self):
+        original = self.loan.due_date
+        response = self.client.post(self.url, {'additional_days': 2.7}, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.loan.refresh_from_db()
+        self.assertEqual(self.loan.due_date, original)
+
     def test_returned_loan_cannot_be_extended(self):
         loan = make_loan(due_in_days=7, is_returned=True)
         response = self.client.post(

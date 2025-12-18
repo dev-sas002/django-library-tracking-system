@@ -46,4 +46,4 @@ class LoanOverdue(DomainError):
 
 class InvalidExtension(DomainError):
     code = 'invalid_extension'
-    message = 'additional_days must be a positive integer.'
+    message = 'additional_days is out of range.'

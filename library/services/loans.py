@@ -49,6 +49,10 @@ ALLOWED_TRANSITIONS = {
 #: Statuses from which a loan may be extended.
 EXTENDABLE_STATUSES = frozenset({LoanStatus.ACTIVE})
 
+#: Upper bound on one extension. Beyond being a sane policy, it keeps
+#: ``due_date + timedelta(days=n)`` clear of ``OverflowError``.
+MAX_EXTENSION_DAYS = 365
+
 
 def resolve_member(member_id):
     """Return the :class:`~library.models.Member` for ``member_id``.
@@ -68,17 +72,21 @@ def resolve_member(member_id):
 
 
 def parse_additional_days(raw_value):
-    """Coerce the ``additional_days`` payload field to a positive integer."""
+    """Coerce the ``additional_days`` payload field to an integer in 1..MAX_EXTENSION_DAYS."""
     if raw_value is None or raw_value == '':
         raise InvalidExtension('additional_days is required.', code='additional_days_required')
+    not_an_integer = InvalidExtension(
+        'additional_days must be an integer.', code='additional_days_not_an_integer'
+    )
+    # JSON true is an int to Python and int(2.7) is 2; neither is a day count.
+    if isinstance(raw_value, bool) or (isinstance(raw_value, float) and not raw_value.is_integer()):
+        raise not_an_integer
     try:
         additional_days = int(raw_value)
-    except (TypeError, ValueError):
-        raise InvalidExtension(
-            'additional_days must be an integer.', code='additional_days_not_an_integer'
-        ) from None
-    if additional_days < 1:
-        raise InvalidExtension()
+    except (TypeError, ValueError, OverflowError):
+        raise not_an_integer from None
+    if not 1 <= additional_days <= MAX_EXTENSION_DAYS:
+        raise InvalidExtension(f'additional_days must be between 1 and {MAX_EXTENSION_DAYS}.')
     return additional_days
 
 

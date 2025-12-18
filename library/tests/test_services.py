@@ -42,6 +42,23 @@ class ParseAdditionalDaysTests(TestCase):
             with self.subTest(value=value), self.assertRaises(exceptions.InvalidExtension):
                 loan_service.parse_additional_days(value)
 
+    def test_more_than_the_maximum_is_rejected(self):
+        limit = loan_service.MAX_EXTENSION_DAYS
+        self.assertEqual(loan_service.parse_additional_days(limit), limit)
+        for value in (limit + 1, 3_000_000, 10**12):
+            with self.subTest(value=value), self.assertRaises(exceptions.InvalidExtension) as ctx:
+                loan_service.parse_additional_days(value)
+            self.assertEqual(ctx.exception.code, 'invalid_extension')
+
+    def test_fractions_and_booleans_are_not_day_counts(self):
+        for value in (2.7, True, False, float('inf'), '2.5'):
+            with self.subTest(value=value), self.assertRaises(exceptions.InvalidExtension) as ctx:
+                loan_service.parse_additional_days(value)
+            self.assertEqual(ctx.exception.code, 'additional_days_not_an_integer')
+
+    def test_a_whole_float_is_accepted(self):
+        self.assertEqual(loan_service.parse_additional_days(3.0), 3)
+
 
 class LoanBookTests(TestCase):
     def test_opens_a_loan_and_decrements_stock(self):
