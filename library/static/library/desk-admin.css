@@ -1,0 +1,167 @@
+/* Library Desk: the stock Django admin re-dressed as a circulation desk.
+   Only admin CSS variables and a few selectors are touched, so upgrades to
+   the admin's own stylesheet keep working underneath. */
+
+:root {
+    --desk-green: #1f4d3a;
+    --desk-green-deep: #163a2b;
+    --desk-brass: #e3b45b;
+    --desk-paper: #fbf8f2;
+
+    --primary: #2f6b4f;
+    --secondary: var(--desk-green);
+    --accent: var(--desk-brass);
+    --primary-fg: #fff;
+
+    --body-fg: #29261f;
+    --body-bg: var(--desk-paper);
+    --body-quiet-color: #5f5a4e;
+    --body-medium-color: #423e35;
+
+    --header-color: #f3ead8;
+    --header-branding-color: var(--desk-brass);
+    --header-bg: var(--desk-green);
+    --header-link-color: #fff;
+
+    --breadcrumbs-fg: #d9e6dd;
+    --breadcrumbs-link-fg: #fff;
+    --breadcrumbs-bg: var(--desk-green-deep);
+
+    --link-fg: #1f6b4a;
+    --link-hover-color: #0f3d2a;
+    --link-selected-fg: var(--desk-green);
+
+    --hairline-color: #e6dfd0;
+    --border-color: #cfc6b3;
+    --darkened-bg: #f3eee3;
+    --selected-bg: #ebe3d2;
+    --selected-row: #fdf1d6;
+
+    --button-bg: var(--desk-green);
+    --button-hover-bg: var(--desk-green-deep);
+    --default-button-bg: #8a5a12;
+    --default-button-hover-bg: #73490c;
+
+    --font-family-primary: "Source Sans 3", "Segoe UI", system-ui, -apple-system, sans-serif;
+
+    --status-active-fg: #1d5a3c;
+    --status-active-bg: #dcefe3;
+    --status-overdue-fg: #8a2216;
+    --status-overdue-bg: #f9e0db;
+    --status-returned-fg: #4e4a40;
+    --status-returned-bg: #ece7dc;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+        --primary: #1d3d2f;
+        --secondary: #10291f;
+        --body-fg: #ece8de;
+        --body-bg: #121512;
+        --body-quiet-color: #b9b3a5;
+        --body-medium-color: #d6d1c5;
+        --header-bg: #10291f;
+        --breadcrumbs-bg: #1d3d2f;
+        --link-fg: #8fd1ad;
+        --link-hover-color: #b8e6cb;
+        --link-selected-fg: #8fd1ad;
+        --hairline-color: #2a2f29;
+        --border-color: #3b4239;
+        --darkened-bg: #1b201b;
+        --selected-bg: #242a23;
+        --selected-row: #2b3320;
+        --status-active-fg: #a9e3c2;
+        --status-active-bg: #1d3d2f;
+        --status-overdue-fg: #ffb4a6;
+        --status-overdue-bg: #4a1d16;
+        --status-returned-fg: #d6d1c5;
+        --status-returned-bg: #2e322c;
+    }
+}
+
+html[data-theme="dark"] {
+    --primary: #1d3d2f;
+    --secondary: #10291f;
+    --body-fg: #ece8de;
+    --body-bg: #121512;
+    --body-quiet-color: #b9b3a5;
+    --body-medium-color: #d6d1c5;
+    --header-bg: #10291f;
+    --breadcrumbs-bg: #1d3d2f;
+    --link-fg: #8fd1ad;
+    --link-hover-color: #b8e6cb;
+    --link-selected-fg: #8fd1ad;
+    --hairline-color: #2a2f29;
+    --border-color: #3b4239;
+    --darkened-bg: #1b201b;
+    --selected-bg: #242a23;
+    --selected-row: #2b3320;
+    --status-active-fg: #a9e3c2;
+    --status-active-bg: #1d3d2f;
+    --status-overdue-fg: #ffb4a6;
+    --status-overdue-bg: #4a1d16;
+    --status-returned-fg: #d6d1c5;
+    --status-returned-bg: #2e322c;
+}
+
+body {
+    background: var(--body-bg);
+}
+
+#site-name,
+#content h1,
+#content h2,
+.module caption,
+.module h2 {
+    font-family: "Literata", Georgia, "Times New Roman", serif;
+    letter-spacing: 0;
+}
+
+#site-name {
+    font-weight: 650;
+}
+
+#header {
+    border-bottom: 3px solid var(--desk-brass);
+}
+
+.module h2,
+.module caption,
+.inline-group h2 {
+    font-size: 0.95rem;
+    font-weight: 500;
+}
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+    outline: 3px solid var(--desk-brass);
+    outline-offset: 2px;
+}
+
+.loan-status {
+    display: inline-block;
+    padding: 2px 9px;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    line-height: 1.5;
+    white-space: nowrap;
+}
+
+.loan-status--active {
+    color: var(--status-active-fg);
+    background: var(--status-active-bg);
+}
+
+.loan-status--overdue {
+    color: var(--status-overdue-fg);
+    background: var(--status-overdue-bg);
+}
+
+.loan-status--returned {
+    color: var(--status-returned-fg);
+    background: var(--status-returned-bg);
+}

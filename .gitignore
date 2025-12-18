@@ -41,7 +41,7 @@ db.sqlite3-journal
 
 # Media and static files
 media/
-static/
+/static/
 staticfiles/*
 !staticfiles/.gitkeep
 

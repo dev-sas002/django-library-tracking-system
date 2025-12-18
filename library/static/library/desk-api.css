@@ -1,0 +1,94 @@
+/* Library Desk palette applied to DRF's Bootstrap 3 browsable API. */
+
+:root {
+    --desk-green: #1f4d3a;
+    --desk-green-deep: #163a2b;
+    --desk-brass: #e3b45b;
+    --desk-paper: #fbf8f2;
+    --desk-ink: #29261f;
+    --desk-link: #1f6b4a;
+}
+
+body {
+    background: var(--desk-paper);
+    color: var(--desk-ink);
+    font-family: "Source Sans 3", "Segoe UI", system-ui, -apple-system, sans-serif;
+    font-size: 15px;
+}
+
+.wrapper .container {
+    max-width: 1180px;
+}
+
+.navbar-inverse {
+    background: var(--desk-green);
+    border: 0;
+    border-bottom: 3px solid var(--desk-brass);
+}
+
+.navbar-inverse .navbar-brand,
+.navbar-inverse .navbar-brand:hover {
+    color: var(--desk-brass);
+    font-family: "Literata", Georgia, serif;
+    font-weight: 650;
+}
+
+.desk-brand-sub {
+    color: #f3ead8;
+    font-weight: 500;
+}
+
+.navbar-inverse .navbar-nav > li > a {
+    color: #f3ead8;
+}
+
+h1 {
+    font-family: "Literata", Georgia, serif;
+    font-weight: 500;
+}
+
+a {
+    color: var(--desk-link);
+}
+
+a:hover,
+a:focus {
+    color: var(--desk-green-deep);
+}
+
+.breadcrumb {
+    background: #f3eee3;
+    margin-top: 18px;
+}
+
+.btn-primary {
+    background: var(--desk-green);
+    border-color: var(--desk-green-deep);
+}
+
+.btn-primary:hover,
+.btn-primary:focus {
+    background: var(--desk-green-deep);
+    border-color: var(--desk-green-deep);
+}
+
+pre.prettyprint {
+    background: #fff;
+    border-color: #e6dfd0;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.request-info,
+.response-info {
+    overflow-x: auto;
+}
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+    outline: 3px solid var(--desk-brass);
+    outline-offset: 2px;
+}

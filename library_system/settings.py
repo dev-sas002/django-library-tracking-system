@@ -72,7 +72,8 @@ ROOT_URLCONF = 'library_system.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],  # Add template directories if needed
+        # Project-level overrides of the admin and DRF base templates.
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
