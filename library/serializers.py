@@ -1,5 +1,6 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
+from rest_framework.validators import UniqueValidator
 
 from .models import Author, Book, Loan, Member
 
@@ -29,8 +30,17 @@ class UserSerializer(serializers.ModelSerializer):
 
 class MemberSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
+    # Declared fields do not inherit the model's unique constraint as a
+    # validator, so without this a second profile for one user is a 500.
     user_id = serializers.PrimaryKeyRelatedField(
-        queryset=User.objects.all(), source='user', write_only=True
+        queryset=User.objects.all(),
+        source='user',
+        write_only=True,
+        validators=[
+            UniqueValidator(
+                queryset=Member.objects.all(), message='This user already has a member profile.'
+            )
+        ],
     )
 
     class Meta:

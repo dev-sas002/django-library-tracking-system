@@ -65,6 +65,12 @@ class MemberSerializerTests(TestCase):
         )
         self.assertNotIn('password', str(data))
 
+    def test_second_profile_for_the_same_user_is_rejected(self):
+        member = make_member(username='twice')
+        serializer = MemberSerializer(data={'user_id': member.user_id})
+        self.assertFalse(serializer.is_valid())
+        self.assertIn('user_id', serializer.errors)
+
 
 class LoanSerializerTests(TestCase):
     def test_exposes_due_date_and_is_overdue(self):
