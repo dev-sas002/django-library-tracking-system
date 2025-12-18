@@ -10,6 +10,12 @@ from library.tasks import check_overdue_loans, send_loan_notification
 from library.tests.factories import make_book, make_loan, make_member
 
 
+class BrokerTransportTests(TestCase):
+    def test_the_redis_transport_imports(self):
+        """kombu's Redis transport has its own extras; a missing one only shows on a worker."""
+        import kombu.transport.redis  # noqa: F401
+
+
 class SendLoanNotificationTests(TestCase):
     def test_sends_email_to_the_member(self):
         member = make_member(username='ana', email='ana@example.com')
