@@ -1,0 +1,36 @@
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+extend-exclude = ["project_venv", "library/migrations", "staticfiles"]
+
+[tool.ruff.lint]
+select = [
+    "E",    # pycodestyle
+    "W",    # pycodestyle warnings
+    "F",    # pyflakes
+    "I",    # import sorting
+    "UP",   # pyupgrade
+    "B",    # bugbear
+    "C4",   # comprehensions
+    "DJ",   # flake8-django
+    "SIM",  # simplify
+    "RUF",  # ruff-specific
+]
+ignore = [
+    # Django and DRF declare `Meta.fields`, `list_display`, `ordering` etc. as
+    # plain class-level lists/tuples by convention; ClassVar annotations on all
+    # of them would be noise.
+    "RUF012",
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Test modules assert on long literal payloads and import fixtures liberally.
+"library/tests/*" = ["E501"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["library", "library_system", "utils"]
+
+[tool.ruff.format]
+# The codebase was written with single quotes; keeping the formatter aligned
+# with it means `ruff format` is a no-op rather than a 900-line diff.
+quote-style = "single"
