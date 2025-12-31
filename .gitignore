@@ -59,7 +59,6 @@ Dockerfile.debug
 Dockerfile.prod
 
 # IDEs and editors
-.vscode/
 .idea/
 *.sublime-project
 *.sublime-workspace
@@ -108,3 +107,7 @@ dmypy.json
 .cursor/rules/
 .cursor/skills-*/
 .cursor/plans/
+branch_structure.json
+temp_auto_push.bat
+temp_interactive_push.bat
+.gitignore
